@@ -1,0 +1,15 @@
+view:
+  height: 800
+  width: 800
+
+game:
+  fps: 60
+
+player:
+  init_pos: [400, 400]
+  init_speed: 4
+  init_angle: 0
+  min_speed: 1
+  max_speed: 10
+  speed_delta: 0.2
+  angle_delta: 10
