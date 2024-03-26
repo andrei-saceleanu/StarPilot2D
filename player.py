@@ -65,6 +65,16 @@ class Player:
                 coll_idx.append(idx)
         return coll_idx
     
+    def check_pickups(self, pickups, bar):
+        
+        coll_idx = []
+        for idx, pickup in enumerate(pickups):
+            if np.linalg.norm(np.array(self.pos) - pickup.pos) <= pickup.size[0]/2:
+                pickup.apply(bar)
+                coll_idx.append(idx)
+        return coll_idx
+        
+    
     def draw(self, screen):
         rotated_img = pygame.transform.rotate(self.img, -self.angle)
         screen.blit(
@@ -109,9 +119,9 @@ class RandomPlayer(Player):
         act_idx = np.random.randint(0,4)
         
         if act_idx==0:
-            self.speed = min(self.interval[1], self.speed+self.speed_delta)
+            self.speed = min(self.interval[1], self.speed + self.speed_delta)
         if act_idx==1:
-            self.speed = max(self.interval[0], self.speed-self.speed_delta)
+            self.speed = max(self.interval[0], self.speed - self.speed_delta)
         if act_idx==2:
             self.angle = (self.angle - self.angle_delta) % 360
         elif act_idx==3:

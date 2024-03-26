@@ -6,6 +6,7 @@ from yaml import safe_load
 
 from target import Target
 from player import HumanPlayer, RandomPlayer
+from pickup import ReplenishFuel, BetterPlane
 from status import StatusBar
 
 def parse_args():
@@ -34,6 +35,14 @@ def update_targets(targets, coll_idx):
         remaining_targets = [Target(np.random.randint(100, 700, size=(2,)), (80,80),  render=True)]
     return remaining_targets
 
+
+def update_pickups(pickups, coll_idx):
+    remaining_pickups = [elem for idx, elem in enumerate(pickups) if idx not in coll_idx]
+    if not remaining_pickups:
+        remaining_pickups = [ReplenishFuel(np.random.randint(100, 700, size=(2,)), (80,80), render=True)]
+    return remaining_pickups
+
+
 def main():
 
     args = parse_args()
@@ -48,6 +57,7 @@ def main():
 
     run = True
     targets = [Target(pos=np.array([100, 100]), size=(80, 80), render=True)]
+    pickups = [ReplenishFuel(pos=np.array([600, 600]), size=(80, 80), render=True)]
 
     player = HumanPlayer(**config["player"], render=True)
     bar = StatusBar()
@@ -68,6 +78,8 @@ def main():
 
         coll_idx = player.check_points(targets)
         targets = update_targets(targets, coll_idx)
+        coll_idx = player.check_pickups(pickups, bar)
+        pickups = update_pickups(pickups, coll_idx)
 
         bar.update(player.get_fuel_delta())
         
@@ -75,6 +87,8 @@ def main():
         for target in targets:
             target.draw(screen)
         bar.draw(screen)
+        for pickup in pickups:
+            pickup.draw(screen)
 
         text = font.render(f"Score: {player.score}", True, (255,255,255))
         text_box = text.get_rect()

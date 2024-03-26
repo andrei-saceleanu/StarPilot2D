@@ -12,4 +12,4 @@ player:
   min_speed: 1
   max_speed: 10
   speed_delta: 0.2
-  angle_delta: 10
+  angle_delta: 5
