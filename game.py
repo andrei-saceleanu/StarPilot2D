@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from yaml import safe_load
 
 from target import Target
-from player import HumanPlayer, RandomPlayer
+from player import HumanPlayer, RandomPlayer, DQNPlayer
 from pickup import ReplenishFuel, BetterPlane
 from status import StatusBar
 
@@ -42,6 +42,37 @@ def update_pickups(pickups, coll_idx):
         remaining_pickups = [ReplenishFuel(np.random.randint(100, 700, size=(2,)), (80,80), render=True)]
     return remaining_pickups
 
+def get_obs_for_agent(targets, pickups, bar, player):
+    angle_to_ox = player.angle / 180 * np.pi
+    speed = player.speed
+    distance_to_target = np.linalg.norm(player.pos-targets[0].pos)/500
+    angle_to_target = np.arctan2(
+        targets[0].pos[1]-player.pos[1],
+        targets[0].pos[0]-player.pos[0]
+    )
+                
+    distance_to_pickup = np.linalg.norm(player.pos-pickups[0].pos)/500
+    angle_to_pickup = np.arctan2(
+        pickups[0].pos[1]-player.pos[1],
+        pickups[0].pos[0]-player.pos[0]
+    )
+
+    obs = np.array(
+        [
+            angle_to_ox,
+            speed,
+            distance_to_target,
+            angle_to_target,
+            distance_to_pickup,
+            angle_to_pickup,
+            player.angle - angle_to_target,
+            player.angle - angle_to_pickup,
+            bar.value
+        ]
+    ).astype(np.float32)
+    
+    return obs
+
 
 def main():
 
@@ -59,7 +90,7 @@ def main():
     targets = [Target(pos=np.array([100, 100]), size=(80, 80), render=True)]
     pickups = [ReplenishFuel(pos=np.array([600, 600]), size=(80, 80), render=True)]
 
-    player = HumanPlayer(**config["player"], render=True)
+    players = [HumanPlayer(**config["player"], render=True)]
     bar = StatusBar()
     
     while run:
@@ -73,17 +104,23 @@ def main():
             ):
                 run = False
         
-        player.act()
-        player.update(screen_size)
+        for player in players:
+            obs=None
+            if isinstance(player, DQNPlayer):
+                obs = get_obs_for_agent(targets, pickups, bar, player)
 
-        coll_idx = player.check_points(targets)
-        targets = update_targets(targets, coll_idx)
-        coll_idx = player.check_pickups(pickups, bar)
-        pickups = update_pickups(pickups, coll_idx)
+            player.act(obs=obs)
+            player.update(screen_size)
+
+            coll_idx = player.check_points(targets)
+            targets = update_targets(targets, coll_idx)
+            coll_idx = player.check_pickups(pickups, bar)
+            pickups = update_pickups(pickups, coll_idx)
 
         bar.update(player.get_fuel_delta())
         
-        player.draw(screen)
+        for player in players:
+            player.draw(screen)
         for target in targets:
             target.draw(screen)
         bar.draw(screen)
