@@ -1,9 +1,9 @@
-import gym
+import gymnasium as gym
 import pygame
 import numpy as np
 
 from yaml import safe_load
-from gym import spaces
+from gymnasium import spaces
 from pygame.locals import *
 
 from pickup import ReplenishFuel
@@ -56,16 +56,17 @@ class GameEnv(gym.Env):
         self.action_space = spaces.Discrete(5)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(9,))
 
-    def reset(self):
+    def reset(self, seed=None, **kwargs):
         self.player = Player(**self.config["player"])
         self.targets = [Target(pos=np.array([100, 100]), size=(80, 80))]
         self.pickups = [ReplenishFuel(pos=np.array([600, 600]), size=(80, 80))]
         self.target_counter = 0
         self.reward = 0
         self.time = 0.0
+        self.bar.value = 100
         self.time_since_last_point = 0.0
         
-        return self.get_obs()
+        return self.get_obs(), {}
     
     def get_obs(self):
 
@@ -98,36 +99,43 @@ class GameEnv(gym.Env):
 
         for _ in range(5):
             self.time += 1 / self.fps
-            self.time_since_last_point += 1 / self.fps
+            #self.time_since_last_point += 1 / self.fps
 
             self.player.env_act(action)
             self.player.update(self.screen_size)
 
             dist = np.linalg.norm(self.player.pos-self.targets[0].pos)/500
             self.reward += 1 / self.fps
-            self.reward -= dist / (100 * self.fps)
+            self.reward -= dist / self.fps
+
+            dist_pickup = np.linalg.norm(self.player.pos-self.pickups[0].pos)/500
+            self.reward -= dist_pickup / self.fps
 
             coll_idx = self.player.check_points(self.targets)
             if coll_idx:
-                self.time_since_last_point = 0.0
+                #self.time_since_last_point = 0.0
                 self.targets = update_targets(self.targets, coll_idx)
-                self.reward += 100
+                self.reward += 20
 
             coll_idx = self.player.check_pickups(self.pickups, self.bar)
             if coll_idx:
                 self.pickups = update_pickups(self.pickups, coll_idx)
-                self.reward += 50
+                self.reward += 10
 
             self.bar.update(self.player.get_fuel_delta())
-            
-            if (self.time > self.time_limit) or (self.bar.value <= 0):
+           
+            done = False
+            truncated = False
+            if (self.time > self.time_limit):
                 done = True
                 break
-
-            elif self.time_since_last_point > 60:
-                self.reward -= 1000
-                done = True
+            elif (self.bar.value <= 0):
+                truncated = True
                 break
+            #elif self.time_since_last_point > 60:
+            #    self.reward -= 1000
+            #    truncated = True
+            #    break
             else:
                 done = False
 
@@ -140,6 +148,7 @@ class GameEnv(gym.Env):
             self.get_obs(),
             self.reward,
             done,
+            truncated,
             info
         )
 

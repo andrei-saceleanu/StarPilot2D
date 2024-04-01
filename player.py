@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 
+from stable_baselines3 import DQN
 
 class Player:
 
@@ -117,6 +118,29 @@ class RandomPlayer(Player):
 
     def act(self, obs=None):
         act_idx = np.random.randint(0,4)
+        
+        if act_idx==0:
+            self.speed = min(self.interval[1], self.speed + self.speed_delta)
+        if act_idx==1:
+            self.speed = max(self.interval[0], self.speed - self.speed_delta)
+        if act_idx==2:
+            self.angle = (self.angle - self.angle_delta) % 360
+        elif act_idx==3:
+            self.angle = (self.angle + self.angle_delta) % 360
+        self.direction = (np.cos(np.deg2rad(self.angle)), np.sin(np.deg2rad(self.angle)))
+
+class DQNPlayer(Player):
+    def __init__(
+            self, init_pos, init_speed, init_angle, min_speed, max_speed, speed_delta, angle_delta, model_path=None, render=False
+    ):
+        super(DQNPlayer, self).__init__(
+            init_pos, init_speed, init_angle, min_speed, max_speed, speed_delta, angle_delta, render
+        )
+        self.model_path = model_path
+        self.model = DQN.load(self.model_path)
+
+    def act(self, obs=None):
+        act_idx, _ = self.model.predict(obs)
         
         if act_idx==0:
             self.speed = min(self.interval[1], self.speed + self.speed_delta)
