@@ -141,13 +141,15 @@ class DQNPlayer(Player):
 
     def act(self, obs=None):
         act_idx, _ = self.model.predict(obs)
-        
+       
         if act_idx==0:
+            pass
+        elif act_idx==1:
             self.speed = min(self.interval[1], self.speed + self.speed_delta)
-        if act_idx==1:
+        elif act_idx==2:
             self.speed = max(self.interval[0], self.speed - self.speed_delta)
-        if act_idx==2:
-            self.angle = (self.angle - self.angle_delta) % 360
         elif act_idx==3:
+            self.angle = (self.angle - self.angle_delta) % 360
+        elif act_idx==4:
             self.angle = (self.angle + self.angle_delta) % 360
         self.direction = (np.cos(np.deg2rad(self.angle)), np.sin(np.deg2rad(self.angle)))

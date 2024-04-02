@@ -90,7 +90,7 @@ def main():
     targets = [Target(pos=np.array([100, 100]), size=(80, 80), render=True)]
     pickups = [ReplenishFuel(pos=np.array([600, 600]), size=(80, 80), render=True)]
 
-    players = [HumanPlayer(**config["player"], render=True)]
+    players = [DQNPlayer(**config["player"], model_path="weights/rl_model_v1_10000000_steps.zip", render=True)]
     bar = StatusBar()
     
     while run:
