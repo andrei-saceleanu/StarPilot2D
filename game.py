@@ -4,6 +4,7 @@ import numpy as np
 from argparse import ArgumentParser
 from yaml import safe_load
 
+from copy import deepcopy
 from target import Target
 from player import HumanPlayer, RandomPlayer, DQNPlayer
 from pickup import ReplenishFuel, BetterPlane
@@ -90,8 +91,16 @@ def main():
     targets = [Target(pos=np.array([100, 100]), size=(80, 80), render=True)]
     pickups = [ReplenishFuel(pos=np.array([600, 600]), size=(80, 80), render=True)]
 
-    players = [DQNPlayer(**config["player"], model_path="weights/rl_model_v1_10000000_steps.zip", render=True)]
+    players = [
+        DQNPlayer(
+            **deepcopy(config["player"]),
+            model_path=["weights/rl_model_v1_10000000_steps.zip", "weights/rl_model_v6_10000000_steps.zip"],
+            render=True
+        ),
+        HumanPlayer(**deepcopy(config["player"]), render=True)
+    ]
     bar = StatusBar()
+    bar2 = StatusBar(topleft=(500, 70))
     
     while run:
         screen.fill((118, 170, 176))
@@ -111,27 +120,37 @@ def main():
 
             player.act(obs=obs)
             player.update(screen_size)
-
+            
             coll_idx = player.check_points(targets)
             targets = update_targets(targets, coll_idx)
-            coll_idx = player.check_pickups(pickups, bar)
+            if isinstance(player, DQNPlayer):
+                coll_idx = player.check_pickups(pickups, bar)
+            else:
+                coll_idx = player.check_pickups(pickups, bar2)
             pickups = update_pickups(pickups, coll_idx)
 
-        bar.update(player.get_fuel_delta())
+        bar.update(players[0].get_fuel_delta())
+        bar2.update(players[1].get_fuel_delta())
         
         for player in players:
             player.draw(screen)
         for target in targets:
             target.draw(screen)
         bar.draw(screen)
+        bar2.draw(screen)
         for pickup in pickups:
             pickup.draw(screen)
 
-        text = font.render(f"Score: {player.score}", True, (255,255,255))
+        text = font.render(f"Score (AI): {players[0].score}", True, (255,255,255))
         text_box = text.get_rect()
         text_box.topleft = (10,20)
         screen.blit(text, text_box)
-
+    
+        text = font.render(f"Score (Human): {players[1].score}", True, (255,255,255))
+        text_box = text.get_rect()
+        text_box.topleft = (10,50)
+        screen.blit(text, text_box)
+    
         pygame.display.update()
         clock.tick(fps)
 

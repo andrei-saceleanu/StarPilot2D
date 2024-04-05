@@ -97,7 +97,6 @@ class HumanPlayer(Player):
 
     def act(self, obs=None):
         keys = pygame.key.get_pressed()
-        
         if keys[pygame.K_UP]:
             self.speed = min(self.interval[1], self.speed+self.speed_delta)
         if keys[pygame.K_DOWN]:
@@ -137,10 +136,16 @@ class DQNPlayer(Player):
             init_pos, init_speed, init_angle, min_speed, max_speed, speed_delta, angle_delta, render
         )
         self.model_path = model_path
-        self.model = DQN.load(self.model_path)
+        self.model1 = DQN.load(self.model_path[0])
+        self.model2 = DQN.load(self.model_path[1])
 
     def act(self, obs=None):
-        act_idx, _ = self.model.predict(obs)
+        if obs[-1] >= 30.0:
+            act_idx, _ = self.model1.predict(obs)
+        else:
+            crt_obs = obs.copy()
+            crt_obs[-1] = 95.0
+            act_idx, _ = self.model2.predict(crt_obs)
        
         if act_idx==0:
             pass

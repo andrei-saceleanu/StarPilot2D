@@ -2,9 +2,9 @@ import pygame
 
 
 class StatusBar:
-    def __init__(self, value=100, max_value=100):
+    def __init__(self, value=100, max_value=100, topleft=(500, 20)):
 
-        self.img = pygame.Rect(500, 20, 200, 40)
+        self.img = pygame.Rect(topleft[0], topleft[1], 200, 40)
         self.value = value
         self.max_value = max_value
     
