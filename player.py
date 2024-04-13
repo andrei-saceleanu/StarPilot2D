@@ -139,6 +139,25 @@ class DQNPlayer(Player):
         self.model1 = DQN.load(self.model_path[0])
         self.model2 = DQN.load(self.model_path[1])
 
+        if render:
+            self.set_sprite()
+
+    def set_sprite(self):
+        self.img = pygame.image.load("assets/plane.png")
+        for x in range(self.img.get_width()):
+            for y in range(self.img.get_height()):
+                curr_color = self.invert_at(x, y)
+                self.img.set_at((x, y), curr_color)
+        self.img.convert_alpha()
+        self.img = pygame.transform.scale(self.img, (50,50))
+        self.img = pygame.transform.rotate(self.img, -90)
+
+    def invert_at(self, x, y):
+        curr_color = self.img.get_at((x, y))
+        curr_color.r = 255-curr_color.r
+        curr_color.b = 255-curr_color.b
+        return curr_color
+
     def act(self, obs=None):
         if obs[-1] >= 30.0:
             act_idx, _ = self.model1.predict(obs)

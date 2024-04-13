@@ -4,6 +4,7 @@ view:
 
 game:
   fps: 60
+  time_limit: 300
 
 player:
   init_pos: [400, 400]
