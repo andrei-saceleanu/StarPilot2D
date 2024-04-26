@@ -1,9 +1,4 @@
 import pygame
-import numpy as np
-
-from player import Player
-from status import StatusBar
-
 
 class Pickup(object):
     def __init__(self, pos, size, img_path, render=False):
@@ -28,10 +23,10 @@ class Pickup(object):
             )    
         )
 
-    def apply(self, subject):
+    def apply(self, *args):
         pass
 
-    def undo(self, subject):
+    def undo(self, *args):
         pass
 
 class ReplenishFuel(Pickup):
@@ -39,29 +34,17 @@ class ReplenishFuel(Pickup):
     def __init__(self, pos, size, img_path="assets/fuel.png", render=False):
         super(ReplenishFuel, self).__init__(pos, size, img_path, render)
 
-    def apply(self, subject):
-        if isinstance(subject, StatusBar):
-            subject.update(20)
-        else:
-            raise Exception("ReplenishFuel is applied only on StatusBar")
+    def apply(self, *args):
+        args[0].update(20)
 
 class BetterPlane(Pickup):
 
     def __init__(self, pos, size, img_path="assets/cog.png", render=False):
         super(BetterPlane, self).__init__(pos, size, img_path, render)
-        self._func = lambda x: 2*x
-        self._inv_func = lambda x: x/2
+        self._func = lambda x: min(1.2*x, 8)
+        self._inv_func = lambda x: max(x/1.2, 3)
 
-    def apply(self, subject):
-        if isinstance(subject, Player):
-            subject.angle_delta = self._func(subject.angle_delta)
-        else:
-            raise Exception("BetterPlane is applied only on Player and subclasses")
-        
-    def undo(self, subject):
-        if isinstance(subject, Player):
-            subject.angle_delta = self._inv_func(subject.angle_delta)
-        else:
-            raise Exception("BetterPlane is applied only on Player and subclasses")
-        
+    def apply(self, *args):
+        args[1].angle_delta = self._func(args[1].angle_delta)
 
+pickup_types = [ReplenishFuel, BetterPlane]

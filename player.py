@@ -71,7 +71,7 @@ class Player:
         coll_idx = []
         for idx, pickup in enumerate(pickups):
             if np.linalg.norm(np.array(self.pos) - pickup.pos) <= pickup.size[0]/2:
-                pickup.apply(bar)
+                pickup.apply(bar, self)
                 coll_idx.append(idx)
         return coll_idx
         
@@ -94,6 +94,7 @@ class HumanPlayer(Player):
         super(HumanPlayer, self).__init__(
             init_pos, init_speed, init_angle, min_speed, max_speed, speed_delta, angle_delta, render
         )
+        self.name = "Human"
 
     def act(self, obs=None):
         keys = pygame.key.get_pressed()
@@ -135,6 +136,7 @@ class DQNPlayer(Player):
         super(DQNPlayer, self).__init__(
             init_pos, init_speed, init_angle, min_speed, max_speed, speed_delta, angle_delta, render
         )
+        self.name = "AI"
         self.model_path = model_path
         self.model1 = DQN.load(self.model_path[0])
         self.model2 = DQN.load(self.model_path[1])
