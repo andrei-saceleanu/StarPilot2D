@@ -8,20 +8,30 @@ from target import Target
 from player import DQNPlayer, HumanPlayer
 from pickup import pickup_types
 
-def update_targets(targets, coll_idx):
-    remaining_targets = [elem for idx, elem in enumerate(targets) if idx not in coll_idx]
+def smart_sample(remaining_targets, remaining_pickups):
+    while True:
+        sample_pos = np.random.randint(100, 700, size=(2,))
+        done  = all(
+            [np.linalg.norm(sample_pos-elem.pos)>85 for elem in remaining_targets+remaining_pickups]
+        )
+        if done:
+            break
+    return sample_pos
+
+def update_elements(targets, target_idx, pickups, pickup_idx):
+    remaining_targets = [elem for idx, elem in enumerate(targets) if idx not in target_idx]
+    remaining_pickups = [elem for idx, elem in enumerate(pickups) if idx not in pickup_idx]
+
     if not remaining_targets or (len(remaining_targets) < 2 and random() < 0.01):
-        remaining_targets.append(Target(np.random.randint(100, 700, size=(2,)), (80,80),  render=True))
-    return remaining_targets
+        sample_pos = smart_sample(remaining_targets, remaining_pickups)
+        remaining_targets.append(Target(sample_pos, (80,80),  render=True))
 
-
-def update_pickups(pickups, coll_idx):
-    remaining_pickups = [elem for idx, elem in enumerate(pickups) if idx not in coll_idx]
     if not remaining_pickups or (len(remaining_pickups) < 2 and random() < 0.005):
+        sample_pos = smart_sample(remaining_targets, remaining_pickups)
         pickup_type = choice(pickup_types)
-        remaining_pickups.append(pickup_type(np.random.randint(100, 700, size=(2,)), (80,80), render=True))
-    
-    return remaining_pickups
+        remaining_pickups.append(pickup_type(sample_pos, (80,80), render=True))
+        
+    return remaining_targets, remaining_pickups
 
 def game_over_info(done, players, bar, bar2):
     if done == 1:
@@ -97,11 +107,10 @@ class ElementManager:
             player.act(obs=obs)
             player.update(screen_size)
                 
-            coll_idx = player.check_points(self.targets)
-            self.targets = update_targets(self.targets, coll_idx)
-            coll_idx = player.check_pickups(self.pickups, bar)
-            self.pickups = update_pickups(self.pickups, coll_idx)
-
+            target_idx = player.check_points(self.targets)
+            pickup_idx = player.check_pickups(self.pickups, bar)
+            self.targets, self.pickups = update_elements(self.targets, target_idx, self.pickups, pickup_idx)
+            
             bar.update(player.get_fuel_delta())
             if bar.value <= 0.0:
                 done = 2
