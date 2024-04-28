@@ -49,18 +49,6 @@ class BetterPlane_1(Pickup):
         args[1].angle_delta = self._func(args[1].angle_delta)
         return [self.timeout, args[1], "angle_delta", self._inv_func]
 
-class BetterPlane_1(Pickup):
-
-    def __init__(self, pos, size, img_path="assets/cog.png", render=False):
-        super(BetterPlane_1, self).__init__(pos, size, img_path, render)
-        self._func = lambda x: min(1.2*x, 8)
-        self._inv_func = lambda x: max(x/1.2, 3)
-        self.timeout = 30
-
-    def apply(self, *args):
-        args[1].angle_delta = self._func(args[1].angle_delta)
-        return [self.timeout, args[1], "angle_delta", self._inv_func]
-
 class BetterPlane_2(Pickup):
 
     def __init__(self, pos, size, img_path="assets/eco.png", render=False):
