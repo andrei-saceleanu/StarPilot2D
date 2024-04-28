@@ -72,7 +72,7 @@ def main():
         
         if done == 0:
             
-            done = manager.update(screen_size)
+            done = manager.update(screen_size, 1000/fps)
             manager.draw(screen, font)
             draw_timer(time_limit, font, screen, cmap, t)
 

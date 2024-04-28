@@ -12,10 +12,12 @@ class Player:
         self.speed = init_speed
         self.angle = init_angle
         self.interval = [min_speed, max_speed]
+        self.fuel_interval = np.array([0.01, 0.1])
         self.speed_delta = speed_delta
         self.angle_delta = angle_delta
         self.direction = (np.cos(np.deg2rad(self.angle)), np.sin(np.deg2rad(self.angle)))
         self.score = 0
+        self.pickups_to_expire = []
 
         if render:
             self.set_sprite()
@@ -46,7 +48,7 @@ class Player:
     def get_fuel_delta(self):
 
         t = (self.speed - self.interval[0]) / (self.interval[1] - self.interval[0])
-        fuel_delta = (1 - t) * 0.01 + t * 0.1
+        fuel_delta = (1 - t) * self.fuel_interval[0] + t * self.fuel_interval[1]
         return -fuel_delta
 
     def update(self, size):
@@ -66,15 +68,18 @@ class Player:
                 coll_idx.append(idx)
         return coll_idx
     
-    def check_pickups(self, pickups, bar):
+    def check_pickups(self, pickups, bar, dt):
         
+        self._undo_expired_pickup_effects(dt)
+
         coll_idx = []
         for idx, pickup in enumerate(pickups):
             if np.linalg.norm(np.array(self.pos) - pickup.pos) <= pickup.size[0]/2:
-                pickup.apply(bar, self)
+                expire_data = pickup.apply(bar, self)
+                if expire_data is not None:
+                    self.pickups_to_expire.append(expire_data)
                 coll_idx.append(idx)
         return coll_idx
-        
     
     def draw(self, screen):
         rotated_img = pygame.transform.rotate(self.img, -self.angle)
@@ -86,6 +91,20 @@ class Player:
             )    
         )
 
+    def _undo_expired_pickup_effects(self, dt):
+        rem = []
+        for idx in range(len(self.pickups_to_expire)):
+            curr = self.pickups_to_expire[idx]
+            curr[0] -= dt/1000
+            if curr[0] <= 0:
+                att = getattr(curr[1], curr[2])
+                if not callable(att):
+                    setattr(curr[1], curr[2], curr[3](att))
+                else:
+                    getattr(curr[1], curr[2])(curr[3])
+            else:
+                rem.append(idx)
+        self.pickups_to_expire = [elem for i, elem in enumerate(self.pickups_to_expire) if i in rem]
 
 class HumanPlayer(Player):
     def __init__(

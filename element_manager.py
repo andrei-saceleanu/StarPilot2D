@@ -99,7 +99,7 @@ class ElementManager:
             screen.blit(text, text_box)
             base_pos[1] += 30
 
-    def update(self, screen_size):
+    def update(self, screen_size, dt):
         
         done = 0
         for idx, (bar, player) in enumerate(zip(self.huds, self.players)):
@@ -108,7 +108,7 @@ class ElementManager:
             player.update(screen_size)
                 
             target_idx = player.check_points(self.targets)
-            pickup_idx = player.check_pickups(self.pickups, bar)
+            pickup_idx = player.check_pickups(self.pickups, bar, dt)
             self.targets, self.pickups = update_elements(self.targets, target_idx, self.pickups, pickup_idx)
             
             bar.update(player.get_fuel_delta())
