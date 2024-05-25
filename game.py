@@ -48,7 +48,7 @@ def main():
     t = 0
 
     cmap = mpl.colormaps["gist_rainbow"]
-    manager = ElementManager(config)
+    manager = ElementManager(config, train=False, render=True)
 
     while not quit:
         screen.fill((118, 170, 176))

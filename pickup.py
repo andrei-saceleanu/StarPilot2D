@@ -31,11 +31,9 @@ class ReplenishFuel(Pickup):
 
     def __init__(self, pos, size, img_path="assets/fuel.png", render=False):
         super(ReplenishFuel, self).__init__(pos, size, img_path, render)
-        # self.timeout = 5
 
     def apply(self, *args):
         args[0].update(20)
-        # return [self.timeout, args[0], "update", -20]
 
 class BetterPlane_1(Pickup):
 
@@ -43,7 +41,7 @@ class BetterPlane_1(Pickup):
         super(BetterPlane_1, self).__init__(pos, size, img_path, render)
         self._func = lambda x: min(1.2*x, 8)
         self._inv_func = lambda x: max(x/1.2, 3)
-        self.timeout = 30
+        self.timeout = 10
 
     def apply(self, *args):
         args[1].angle_delta = self._func(args[1].angle_delta)
@@ -53,8 +51,8 @@ class BetterPlane_2(Pickup):
 
     def __init__(self, pos, size, img_path="assets/eco.png", render=False):
         super(BetterPlane_2, self).__init__(pos, size, img_path, render)
-        self._func = lambda x: 0.75 * x
-        self._inv_func = lambda x: 1.33 * x
+        self._func = lambda x: [x[0], max(0.05, 0.75 * x[1])]
+        self._inv_func = lambda x: [x[0], min(0.1, 1.33 * x[1])]
         self.timeout = 15
 
     def apply(self, *args):
