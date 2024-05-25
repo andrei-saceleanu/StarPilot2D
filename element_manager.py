@@ -126,7 +126,7 @@ class ElementManager:
 
         done = 0
         for _, (bar, player) in enumerate(zip(self.huds, self.players)):
-            player.env_act(act=act)
+            player.env_act(act)
             player.update(screen_size)
                 
             target_idx = player.check_points(self.targets)
@@ -140,7 +140,7 @@ class ElementManager:
 
         return done, (target_idx, pickup_idx), elem_info
 
-    def compute_dists(self):
+    def compute_info(self):
         targets_info = []
         pickups_info = []
         for target in self.targets:
